@@ -8,13 +8,15 @@ import (
 )
 
 type Config struct {
-	ApiVersion     string    `json:"apiVersion"`
-	Kind           string    `json:"kind"`
-	Clusters       []cluster `json:"clusters"`
-	CurrentContext string    `json:"current-context"`
+	ApiVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	// 如果是值类型，无法修改cluster中的值，如果需要修改，需要定义成指针类型
+	Clusters       []*cluster `json:"clusters"`
+	CurrentContext string     `json:"current-context"`
 }
 
 type cluster struct {
+	ID   string `json:"id,omitempty"`
 	Name string `json:"name"`
 	Addr string `json:"addr"`
 }
@@ -138,15 +140,63 @@ func main() {
 		Aliases: []string{"re"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parse2Struct(kfFile)
-			name := cmd.Flags().Lookup("name").Value.String()
-			renameClusterFromName(kfFile, name, config)
+			oldName := cmd.Flags().Lookup("oldName").Value.String()
+			newName := cmd.Flags().Lookup("newName").Value.String()
+			renameClusterFromName(oldName, newName, config)
 			return err
 		},
+	}
+	var oldName string
+	var newName string
+	renameCmd.Flags().StringVarP(&oldName, "oldName", "o", "", "switch cluster oldName")
+	err = renameCmd.MarkFlagRequired("oldName")
+	if err != nil {
+		panic(err)
+	}
+	renameCmd.Flags().StringVarP(&newName, "newName", "n", "", "switch cluster newName")
+	err = renameCmd.MarkFlagRequired("newName")
+	if err != nil {
+		panic(err)
+	}
+
+	// switch
+	switchCmd := &cobra.Command{
+		Use:     "switch ",
+		Short:   "switch kafka cluster",
+		Aliases: []string{"s"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := parse2Struct(kfFile)
+			name := cmd.Flags().Lookup("name").Value.String()
+			switchClusterFromName(kfFile, name, config)
+			return err
+		},
+	}
+	currentCmd := &cobra.Command{
+		Use:     "current ",
+		Short:   "current kafka cluster",
+		Aliases: []string{"c"},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := parse2Struct(kfFile)
+			for _, currentCluster := range config.Clusters {
+				if currentCluster.Name == config.CurrentContext {
+					printCurrentClusterInfo(*currentCluster)
+				}
+			}
+			return err
+		},
+	}
+	var switchClusterName string
+	switchCmd.Flags().StringVarP(&switchClusterName, "name", "n", "", "switch cluster name")
+	err = switchCmd.MarkFlagRequired("name")
+	if err != nil {
+		panic(err)
 	}
 
 	clusterCmd.AddCommand(addCmd)
 	clusterCmd.AddCommand(listCmd)
 	clusterCmd.AddCommand(removeCmd)
+	clusterCmd.AddCommand(switchCmd)
+	clusterCmd.AddCommand(currentCmd)
 	clusterCmd.AddCommand(renameCmd)
 
 	kfCmd.AddCommand(clusterCmd)
@@ -157,7 +207,48 @@ func main() {
 
 }
 
-func renameClusterFromName(file string, name string, config *Config) {
+func switchClusterFromName(fileName string, name string, config *Config) {
+	// 将文件序列成对象
+	file, err := os.ReadFile(fileName)
+	if err != nil {
+		panic(err)
+	}
+	err = yaml.Unmarshal(file, config)
+	if err != nil {
+		panic(err)
+	}
+	// 替换当前的上下文
+	config.CurrentContext = name
+	// 重新写入yaml
+	yamlData, err := yaml.Marshal(config)
+	err = os.WriteFile(fileName, yamlData, 0644)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
+func renameClusterFromName(oldName, newName string, config *Config) {
+
+	// 更新current-context
+	if config.CurrentContext == oldName {
+		config.CurrentContext = newName
+	}
+
+	// 更新名称
+	for _, cluster := range config.Clusters {
+		if oldName == cluster.Name {
+			cluster.Name = newName
+			println(cluster.Name)
+		}
+	}
+	// 回写
+	yamlData, err := yaml.Marshal(config)
+	fmt.Println(string(yamlData))
+	err = os.WriteFile(kfFile, yamlData, 0644)
+	if err != nil {
+		panic(err)
+	}
 
 }
 
@@ -196,8 +287,8 @@ func removeClusterFromName(fileName, name string, config *Config) {
 }
 
 func printCurrentClusterInfo(currentCluster cluster) {
-	println(currentCluster.Name)
-	println(currentCluster.Addr)
+	fmt.Println(fmt.Sprintf("name:%s", currentCluster.Name))
+	fmt.Println(fmt.Sprintf("addr:%s", currentCluster.Addr))
 }
 
 func parse2Struct(fileName string) (*Config, error) {
