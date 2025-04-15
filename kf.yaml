@@ -1,6 +1,6 @@
 apiVersion: v1
 clusters:
 - addr: localhost:9092
-  name: local3
-current-context: local3
+  name: local
+current-context: local
 kind: Config
