@@ -20,7 +20,7 @@ func NewReceiveCmd() *cobra.Command {
 				return err
 			}
 			topic := cmd.Flags().Lookup("topic").Value.String()
-			return receiveMessageFromTopic(client, topic)
+			return ReceiveMessageFromTopic(client, topic)
 		},
 	}
 	var topic string
@@ -33,7 +33,7 @@ func NewReceiveCmd() *cobra.Command {
 	return receiveCmd
 }
 
-func receiveMessageFromTopic(client sarama.Client, topic string) error {
+func ReceiveMessageFromTopic(client sarama.Client, topic string) error {
 	// 获取 Topic 的所有分区
 	partitions, err := client.Partitions(topic)
 	if err != nil {

@@ -13,14 +13,7 @@ func NewSendCmd() *cobra.Command {
 		Use:   "send ",
 		Short: "send message to  topic",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			producer, err := client.GetProducer()
-			if err != nil {
-				return err
-			}
-			key := cmd.Flags().Lookup("key").Value.String()
-			value := cmd.Flags().Lookup("value").Value.String()
-			topic := cmd.Flags().Lookup("topic").Value.String()
-			return sendMessage2topic(producer, topic, key, value)
+			return SendMessage(cmd)
 		},
 	}
 	var key string
@@ -41,7 +34,18 @@ func NewSendCmd() *cobra.Command {
 	return sendCmd
 }
 
-func sendMessage2topic(c sarama.SyncProducer, topic string, key string, value string) error {
+func SendMessage(cmd *cobra.Command) error {
+	producer, err := client.GetProducer()
+	if err != nil {
+		return err
+	}
+	key := cmd.Flags().Lookup("key").Value.String()
+	value := cmd.Flags().Lookup("value").Value.String()
+	topic := cmd.Flags().Lookup("topic").Value.String()
+	return SendMessage2topic(producer, topic, key, value)
+}
+
+func SendMessage2topic(c sarama.SyncProducer, topic string, key string, value string) error {
 	_, _, err := c.SendMessage(&sarama.ProducerMessage{
 		Topic: topic,
 		Key:   sarama.StringEncoder(key),

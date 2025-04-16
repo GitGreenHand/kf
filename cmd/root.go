@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"kf/cluster"
+	"kf/combo"
 	"kf/consumer"
 	"kf/group"
 	"kf/producer"
@@ -12,11 +13,9 @@ import (
 func NewRootCmd() *cobra.Command {
 	kfCmd := &cobra.Command{
 		Use:     "kafkaCm",
-		Version: "v1",
+		Version: "v1.0",
 		Long:    "kf is a command line tool for manage with kafka",
 		Short:   "kafka is a command line tool for manage with kafka",
-		Example: "kf add -f kf.yaml;",
-
 		Aliases: []string{"kf"},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			err := cmd.Usage()
@@ -33,5 +32,9 @@ func NewRootCmd() *cobra.Command {
 	kfCmd.AddCommand(producer.NewProducerCmd())
 	kfCmd.AddCommand(group.NewGroupCmd())
 	kfCmd.AddCommand(consumer.NewConsumerCmd())
+	// combo 命令
+	kfCmd.AddCommand(combo.NewTlsCmd())
+	kfCmd.AddCommand(combo.NewPseCmd())
+	kfCmd.AddCommand(combo.NewCreCmd())
 	return kfCmd
 }

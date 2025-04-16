@@ -5,10 +5,11 @@ import "github.com/spf13/cobra"
 func NewTopicCmd() *cobra.Command {
 
 	topicCmd := &cobra.Command{
-		Use:   "topic",
-		Short: "kafka topic",
+		Use:     "topic",
+		Short:   "kafka topic",
+		Aliases: []string{"t"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			return cmd.Help()
 		},
 	}
 

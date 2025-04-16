@@ -13,7 +13,7 @@ func NewMessageCmd() *cobra.Command {
 
 	createCmd := &cobra.Command{
 		Use:     "message",
-		Short:   "message topic to  kafka",
+		Short:   "message topic to kafka",
 		Aliases: []string{"m"},
 		Run: func(cmd *cobra.Command, args []string) {
 			c, err := client.GetClient()
