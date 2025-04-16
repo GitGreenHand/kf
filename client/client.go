@@ -40,6 +40,42 @@ func GetClient() (sarama.Client, error) {
 	return consumer, nil
 }
 
+// GetProducer  获取client
+func GetProducer() (sarama.SyncProducer, error) {
+	// 获取当期的配置文件,创建client
+	config, err := getCurrentClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	saramaConfig := sarama.NewConfig()
+	saramaConfig.Producer.Return.Successes = true          // 必须为 true
+	saramaConfig.Producer.RequiredAcks = sarama.WaitForAll // 确保消息可靠写入
+	saramaConfig.Producer.Retry.Max = 5
+	producer, err := sarama.NewSyncProducer(splitKafkaAddr(config.Addr), saramaConfig)
+	if err != nil {
+		log.Fatalf("Error creating producer: %v", err)
+	}
+	return producer, nil
+}
+
+// GetConsumerGroup  获取client
+func GetConsumerGroup() (sarama.ConsumerGroup, error) {
+	// 获取当期的配置文件,创建client
+	config, err := getCurrentClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	saramaConfig := sarama.NewConfig()
+	saramaConfig.Consumer.Return.Errors = true
+	saramaConfig.Consumer.Offsets.Initial = sarama.OffsetNewest
+	groupID := "kf-group"
+	consumerGroup, err := sarama.NewConsumerGroup(splitKafkaAddr(config.Addr), groupID, saramaConfig)
+	if err != nil {
+		log.Fatalf("Error creating consumer: %v", err)
+	}
+	return consumerGroup, nil
+}
+
 // 使用;来分割
 func splitKafkaAddr(addr string) []string {
 	return strings.Split(addr, ";")

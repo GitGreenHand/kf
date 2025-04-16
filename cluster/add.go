@@ -9,8 +9,9 @@ import (
 func NewAddCmd() *cobra.Command {
 	// add
 	addCmd := &cobra.Command{
-		Use:   "add ",
-		Short: "add kafka cluster",
+		Use:     "add ",
+		Short:   "add kafka cluster",
+		Example: "demo.yaml:\n```\napiVersion: v1\nkind: Config\nclusters:\n  - name: local\n    addr: localhost:9092\n```\n kf cluster add -f demo.yaml",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			var kfConfig *Config
@@ -47,7 +48,7 @@ func NewAddCmd() *cobra.Command {
 		},
 	}
 	var fileName string
-	addCmd.Flags().StringVarP(&fileName, "fileName", "f", "localhost:9092", "specific cluster fileName")
+	addCmd.Flags().StringVarP(&fileName, "fileName", "f", "", "specific cluster fileName")
 	err := addCmd.MarkFlagRequired("fileName")
 	if err != nil {
 		panic(err)

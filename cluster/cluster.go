@@ -17,7 +17,7 @@ func NewClusterCmd() *cobra.Command {
 		Use:   "cluster",
 		Short: "kafka cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return nil
+			return cmd.Help()
 		},
 	}
 	clusterCmd.AddCommand(NewAddCmd())
